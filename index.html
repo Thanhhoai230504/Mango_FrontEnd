@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/mango-icon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#FF8C00" />
+    <meta name="description" content="Ứng dụng kiểm tra chất lượng xoài bằng AI" />
+    <title>🥭 Kiểm Tra Chất Lượng Xoài</title>
+    
+    <!-- Preload fonts for better performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Mobile optimizations -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Kiểm Tra Xoài">
+    
+    <style>
+      body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #FFF8DC 0%, #FFE4B5 100%);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      
+      #root {
+        min-height: 100vh;
+      }
+      
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      
+      ::-webkit-scrollbar-track {
+        background: rgba(255, 140, 0, 0.1);
+        border-radius: 10px;
+      }
+      
+      ::-webkit-scrollbar-thumb {
+        background: linear-gradient(45deg, #FF8C00, #FFA500);
+        border-radius: 10px;
+      }
+      
+      ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(45deg, #FF7F00, #FF8C00);
+      }
+      
+      /* Loading animation */
+      @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+      }
+      
+      .pulse-animation {
+        animation: pulse 2s ease-in-out infinite;
+      }
+      
+      /* Smooth transitions */
+      * {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Service Worker for PWA functionality -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js')
+            .then(function(registration) {
+              console.log('ServiceWorker registration successful');
+            }, function(err) {
+              console.log('ServiceWorker registration failed: ', err);
+            });
+        });
+      }
+    </script>
+  </body>
+</html>

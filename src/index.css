@@ -1,0 +1,155 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles for better mobile experience */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Prevent zoom on input focus (mobile) */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+select,
+textarea {
+  font-size: 16px !important;
+}
+
+/* Custom animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounceIn {
+  0%, 20%, 53%, 80%, to {
+    animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+    transform: translate3d(0, 0, 0);
+  }
+  40%, 43% {
+    animation-timing-function: cubic-bezier(0.755, 0.05, 0.855, 0.06);
+    transform: translate3d(0, -30px, 0) scaleY(1.1);
+  }
+  70% {
+    animation-timing-function: cubic-bezier(0.755, 0.05, 0.855, 0.06);
+    transform: translate3d(0, -15px, 0) scaleY(1.05);
+  }
+  90% {
+    transform: translate3d(0, -4px, 0) scaleY(0.95);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.bounce-in {
+  animation: bounceIn 0.8s ease-out;
+}
+
+/* Custom button hover effects */
+.custom-button-hover {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.custom-button-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 20px rgba(255, 140, 0, 0.3);
+}
+
+.custom-button-hover::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.custom-button-hover:hover::before {
+  left: 100%;
+}
+
+/* Responsive camera container */
+@media (max-width: 600px) {
+  .camera-container {
+    margin: 0 -16px;
+  }
+  
+  .camera-controls {
+    bottom: 10px !important;
+    gap: 12px !important;
+  }
+}
+
+/* Loading spinner custom styles */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Result card animations */
+.result-fresh {
+  background: linear-gradient(135deg, rgba(50, 205, 50, 0.1), rgba(144, 238, 144, 0.2));
+  border: 2px solid #32CD32;
+  animation: bounceIn 0.8s ease-out;
+}
+
+.result-rotten {
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.1), rgba(255, 119, 119, 0.2));
+  border: 2px solid #FF4444;
+  animation: bounceIn 0.8s ease-out;
+}
+
+/* Smooth transitions for all interactive elements */
+button, .MuiFab-root, .MuiCard-root, .MuiChip-root {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Custom focus styles for accessibility */
+button:focus-visible,
+.MuiFab-root:focus-visible {
+  outline: 3px solid #FF8C00;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .result-fresh {
+    border-width: 3px;
+  }
+  
+  .result-rotten {
+    border-width: 3px;
+  }
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
