@@ -171,7 +171,7 @@
 
 //       // Gọi API backend
 //       const apiResponse = await fetch(
-//         "https://mango-backend-2htc.onrender.com/predict/",
+//         "https://web-production-91ffc.up.railway.app/predict/",
 //         {
 //           method: "POST",
 //           body: formData,
@@ -188,7 +188,7 @@
 //       // Load ảnh annotated từ backend nếu có
 //       if (data.image_url) {
 //         const annotatedImageResponse = await fetch(
-//           `https://mango-backend-2htc.onrender.com${data.image_url}`
+//           `https://web-production-91ffc.up.railway.app${data.image_url}`
 //         );
 //         if (annotatedImageResponse.ok) {
 //           const imageBlob = await annotatedImageResponse.blob();
@@ -650,7 +650,9 @@
 
 // export default App;
 
-import React, { useState, useRef, useCallback, useEffect } from "react";
+
+
+import  { useState, useRef, useCallback, useEffect } from "react";
 import {
   Container,
   Paper,
