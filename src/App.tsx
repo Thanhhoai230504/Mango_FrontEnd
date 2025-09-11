@@ -1,651 +1,651 @@
-import React, { useState, useRef, useCallback, useEffect } from "react";
-import {
-  Container,
-  Paper,
-  Typography,
-  Button,
-  Box,
-  CircularProgress,
-  Fab,
-  Chip,
-  Alert,
-  Slide,
-  Fade,
-  Card,
-  CardContent,
-  AppBar,
-  Toolbar,
-} from "@mui/material";
-import {
-  CameraAlt,
-  FlipCameraIos,
-  PhotoCamera,
-  RestartAlt,
-} from "@mui/icons-material";
-import Webcam from "react-webcam";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
-import CssBaseline from "@mui/material/CssBaseline";
+// import React, { useState, useRef, useCallback, useEffect } from "react";
+// import {
+//   Container,
+//   Paper,
+//   Typography,
+//   Button,
+//   Box,
+//   CircularProgress,
+//   Fab,
+//   Chip,
+//   Alert,
+//   Slide,
+//   Fade,
+//   Card,
+//   CardContent,
+//   AppBar,
+//   Toolbar,
+// } from "@mui/material";
+// import {
+//   CameraAlt,
+//   FlipCameraIos,
+//   PhotoCamera,
+//   RestartAlt,
+// } from "@mui/icons-material";
+// import Webcam from "react-webcam";
+// import { createTheme, ThemeProvider } from "@mui/material/styles";
+// import CssBaseline from "@mui/material/CssBaseline";
 
-// Custom theme với màu sắc xoài
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: "#FF8C00", // Màu cam xoài
-      light: "#FFB347",
-      dark: "#FF7F00",
-    },
-    secondary: {
-      main: "#32CD32", // Màu xanh tươi
-      light: "#90EE90",
-      dark: "#228B22",
-    },
-    error: {
-      main: "#FF4444",
-      light: "#FF7777",
-      dark: "#CC0000",
-    },
-    background: {
-      default: "#FFF8DC", // Màu nền nhẹ như xoài chín
-      paper: "#FFFFFF",
-    },
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: 25,
-          textTransform: "none",
-          fontWeight: 600,
-          padding: "12px 24px",
-        },
-      },
-    },
-    MuiFab: {
-      styleOverrides: {
-        root: {
-          boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
-        },
-      },
-    },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: 20,
-          boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
-        },
-      },
-    },
-  },
-});
+// // Custom theme với màu sắc xoài
+// const theme = createTheme({
+//   palette: {
+//     primary: {
+//       main: "#FF8C00", // Màu cam xoài
+//       light: "#FFB347",
+//       dark: "#FF7F00",
+//     },
+//     secondary: {
+//       main: "#32CD32", // Màu xanh tươi
+//       light: "#90EE90",
+//       dark: "#228B22",
+//     },
+//     error: {
+//       main: "#FF4444",
+//       light: "#FF7777",
+//       dark: "#CC0000",
+//     },
+//     background: {
+//       default: "#FFF8DC", // Màu nền nhẹ như xoài chín
+//       paper: "#FFFFFF",
+//     },
+//   },
+//   components: {
+//     MuiButton: {
+//       styleOverrides: {
+//         root: {
+//           borderRadius: 25,
+//           textTransform: "none",
+//           fontWeight: 600,
+//           padding: "12px 24px",
+//         },
+//       },
+//     },
+//     MuiFab: {
+//       styleOverrides: {
+//         root: {
+//           boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
+//         },
+//       },
+//     },
+//     MuiCard: {
+//       styleOverrides: {
+//         root: {
+//           borderRadius: 20,
+//           boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
+//         },
+//       },
+//     },
+//   },
+// });
 
-interface DetectionResult {
-  label: string;
-  confidence: number;
-  emoji: string;
-  message: string;
-}
+// interface DetectionResult {
+//   label: string;
+//   confidence: number;
+//   emoji: string;
+//   message: string;
+// }
 
-interface ApiResponse {
-  results: DetectionResult[];
-  image_url: string;
-}
+// interface ApiResponse {
+//   results: DetectionResult[];
+//   image_url: string;
+// }
 
-function App() {
-  const [isCameraOpen, setIsCameraOpen] = useState(false);
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [annotatedImageUrl, setAnnotatedImageUrl] = useState<string | null>(
-    null
-  );
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [results, setResults] = useState<DetectionResult[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [facingMode, setFacingMode] = useState<"user" | "environment">(
-    "environment"
-  );
+// function App() {
+//   const [isCameraOpen, setIsCameraOpen] = useState(false);
+//   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+//   const [annotatedImageUrl, setAnnotatedImageUrl] = useState<string | null>(
+//     null
+//   );
+//   const [isAnalyzing, setIsAnalyzing] = useState(false);
+//   const [results, setResults] = useState<DetectionResult[] | null>(null);
+//   const [error, setError] = useState<string | null>(null);
+//   const [facingMode, setFacingMode] = useState<"user" | "environment">(
+//     "environment"
+//   );
 
-  const webcamRef = useRef<Webcam>(null);
-  const audioRef = useRef<HTMLAudioElement[]>([]);
+//   const webcamRef = useRef<Webcam>(null);
+//   const audioRef = useRef<HTMLAudioElement[]>([]);
 
-  // Preload audio for feedback
-  useEffect(() => {
-    // Tạo audio elements cho feedback âm thanh
-    const freshAudio = new Audio();
-    const rottenAudio = new Audio();
+//   // Preload audio for feedback
+//   useEffect(() => {
+//     // Tạo audio elements cho feedback âm thanh
+//     const freshAudio = new Audio();
+//     const rottenAudio = new Audio();
 
-    // Trong thực tế, bạn cần thêm file âm thanh vào public folder
-    freshAudio.src = "/sounds/fresh.mp3";
-    rottenAudio.src = "/sounds/rotten.mp3";
+//     // Trong thực tế, bạn cần thêm file âm thanh vào public folder
+//     freshAudio.src = "/sounds/fresh.mp3";
+//     rottenAudio.src = "/sounds/rotten.mp3";
 
-    audioRef.current = [freshAudio, rottenAudio];
-  }, []);
+//     audioRef.current = [freshAudio, rottenAudio];
+//   }, []);
 
-  const playSound = (isFresh: boolean) => {
-    try {
-      const audio = audioRef.current[isFresh ? 0 : 1];
-      audio?.play().catch((e) => console.log("Audio play failed:", e));
-    } catch (e) {
-      console.log("Audio not available:", e);
-    }
-  };
+//   const playSound = (isFresh: boolean) => {
+//     try {
+//       const audio = audioRef.current[isFresh ? 0 : 1];
+//       audio?.play().catch((e) => console.log("Audio play failed:", e));
+//     } catch (e) {
+//       console.log("Audio not available:", e);
+//     }
+//   };
 
-  const openCamera = () => {
-    setIsCameraOpen(true);
-    setCapturedImage(null);
-    setAnnotatedImageUrl(null);
-    setResults(null);
-    setError(null);
-  };
+//   const openCamera = () => {
+//     setIsCameraOpen(true);
+//     setCapturedImage(null);
+//     setAnnotatedImageUrl(null);
+//     setResults(null);
+//     setError(null);
+//   };
 
-  const switchCamera = () => {
-    setFacingMode((prev) => (prev === "user" ? "environment" : "user"));
-  };
+//   const switchCamera = () => {
+//     setFacingMode((prev) => (prev === "user" ? "environment" : "user"));
+//   };
 
-  const capturePhoto = useCallback(() => {
-    const imageSrc = webcamRef.current?.getScreenshot();
-    if (imageSrc) {
-      setCapturedImage(imageSrc);
-      setIsCameraOpen(false);
-      analyzeImage(imageSrc);
-    }
-  }, [webcamRef]);
+//   const capturePhoto = useCallback(() => {
+//     const imageSrc = webcamRef.current?.getScreenshot();
+//     if (imageSrc) {
+//       setCapturedImage(imageSrc);
+//       setIsCameraOpen(false);
+//       analyzeImage(imageSrc);
+//     }
+//   }, [webcamRef]);
 
-  const analyzeImage = async (imageData: string) => {
-    setIsAnalyzing(true);
-    setError(null);
-    setAnnotatedImageUrl(null);
+//   const analyzeImage = async (imageData: string) => {
+//     setIsAnalyzing(true);
+//     setError(null);
+//     setAnnotatedImageUrl(null);
 
-    try {
-      // Nếu imageData là base64, convert về Blob
-      const byteString = atob(imageData.split(",")[1]);
-      const mimeString = imageData.split(",")[0].split(":")[1].split(";")[0];
-      const ab = new ArrayBuffer(byteString.length);
-      const ia = new Uint8Array(ab);
-      for (let i = 0; i < byteString.length; i++) {
-        ia[i] = byteString.charCodeAt(i);
-      }
-      const blob = new Blob([ab], { type: mimeString });
+//     try {
+//       // Nếu imageData là base64, convert về Blob
+//       const byteString = atob(imageData.split(",")[1]);
+//       const mimeString = imageData.split(",")[0].split(":")[1].split(";")[0];
+//       const ab = new ArrayBuffer(byteString.length);
+//       const ia = new Uint8Array(ab);
+//       for (let i = 0; i < byteString.length; i++) {
+//         ia[i] = byteString.charCodeAt(i);
+//       }
+//       const blob = new Blob([ab], { type: mimeString });
 
-      // Tạo form data
-      const formData = new FormData();
-      formData.append("file", blob, "mango.jpg");
+//       // Tạo form data
+//       const formData = new FormData();
+//       formData.append("file", blob, "mango.jpg");
 
-      // Gọi API backend
-      const apiResponse = await fetch("http://127.0.0.1:8000/predict/", {
-        method: "POST",
-        body: formData,
-      });
+//       // Gọi API backend
+//       const apiResponse = await fetch("http://127.0.0.1:8000/predict/", {
+//         method: "POST",
+//         body: formData,
+//       });
 
-      if (!apiResponse.ok) {
-        throw new Error("Lỗi khi phân tích hình ảnh");
-      }
+//       if (!apiResponse.ok) {
+//         throw new Error("Lỗi khi phân tích hình ảnh");
+//       }
 
-      const data: ApiResponse = await apiResponse.json();
-      setResults(data.results);
+//       const data: ApiResponse = await apiResponse.json();
+//       setResults(data.results);
 
-      // Load ảnh annotated từ backend nếu có
-      if (data.image_url) {
-        const annotatedImageResponse = await fetch(
-          `http://127.0.0.1:8000${data.image_url}`
-        );
-        if (annotatedImageResponse.ok) {
-          const imageBlob = await annotatedImageResponse.blob();
-          const imageUrl = URL.createObjectURL(imageBlob);
-          setAnnotatedImageUrl(imageUrl);
-        }
-      }
+//       // Load ảnh annotated từ backend nếu có
+//       if (data.image_url) {
+//         const annotatedImageResponse = await fetch(
+//           `http://127.0.0.1:8000${data.image_url}`
+//         );
+//         if (annotatedImageResponse.ok) {
+//           const imageBlob = await annotatedImageResponse.blob();
+//           const imageUrl = URL.createObjectURL(imageBlob);
+//           setAnnotatedImageUrl(imageUrl);
+//         }
+//       }
 
-      // Phát âm thanh phản hồi
-      if (data.results.length > 0) {
-        const freshCount = data.results.filter(
-          (r) => r.label === "fresh"
-        ).length;
-        const rottenCount = data.results.filter(
-          (r) => r.label === "rotten"
-        ).length;
+//       // Phát âm thanh phản hồi
+//       if (data.results.length > 0) {
+//         const freshCount = data.results.filter(
+//           (r) => r.label === "fresh"
+//         ).length;
+//         const rottenCount = data.results.filter(
+//           (r) => r.label === "rotten"
+//         ).length;
 
-        playSound(freshCount >= rottenCount);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Đã xảy ra lỗi");
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
+//         playSound(freshCount >= rottenCount);
+//       }
+//     } catch (err) {
+//       setError(err instanceof Error ? err.message : "Đã xảy ra lỗi");
+//     } finally {
+//       setIsAnalyzing(false);
+//     }
+//   };
 
-  const resetApp = () => {
-    setIsCameraOpen(false);
-    setCapturedImage(null);
-    setAnnotatedImageUrl(null);
-    setResults(null);
-    setError(null);
-    setIsAnalyzing(false);
+//   const resetApp = () => {
+//     setIsCameraOpen(false);
+//     setCapturedImage(null);
+//     setAnnotatedImageUrl(null);
+//     setResults(null);
+//     setError(null);
+//     setIsAnalyzing(false);
 
-    // Cleanup object URL to prevent memory leaks
-    if (annotatedImageUrl) {
-      URL.revokeObjectURL(annotatedImageUrl);
-    }
-  };
+//     // Cleanup object URL to prevent memory leaks
+//     if (annotatedImageUrl) {
+//       URL.revokeObjectURL(annotatedImageUrl);
+//     }
+//   };
 
-  // Cleanup effect for object URLs
-  useEffect(() => {
-    return () => {
-      if (annotatedImageUrl) {
-        URL.revokeObjectURL(annotatedImageUrl);
-      }
-    };
-  }, [annotatedImageUrl]);
-  const videoConstraints = {
-    width: 1280,
-    height: 720,
-    facingMode: facingMode,
-  };
+//   // Cleanup effect for object URLs
+//   useEffect(() => {
+//     return () => {
+//       if (annotatedImageUrl) {
+//         URL.revokeObjectURL(annotatedImageUrl);
+//       }
+//     };
+//   }, [annotatedImageUrl]);
+//   const videoConstraints = {
+//     width: 1280,
+//     height: 720,
+//     facingMode: facingMode,
+//   };
 
-  return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Box
-        sx={{
-          minHeight: "100vh",
-          background: "linear-gradient(135deg, #FFF8DC 0%, #FFE4B5 100%)",
-        }}
-      >
-        {/* Header */}
-        <AppBar
-          position="static"
-          elevation={0}
-          sx={{
-            background: "linear-gradient(90deg, #FF8C00 0%, #FFA500 100%)",
-          }}
-        >
-          <Toolbar>
-            <Typography
-              variant="h6"
-              component="div"
-              sx={{
-                flexGrow: 1,
-                fontWeight: 700,
-                fontSize: "1.3rem",
-              }}
-            >
-              🥭 Kiểm Tra Chất Lượng Xoài
-            </Typography>
-          </Toolbar>
-        </AppBar>
+//   return (
+//     <ThemeProvider theme={theme}>
+//       <CssBaseline />
+//       <Box
+//         sx={{
+//           minHeight: "100vh",
+//           background: "linear-gradient(135deg, #FFF8DC 0%, #FFE4B5 100%)",
+//         }}
+//       >
+//         {/* Header */}
+//         <AppBar
+//           position="static"
+//           elevation={0}
+//           sx={{
+//             background: "linear-gradient(90deg, #FF8C00 0%, #FFA500 100%)",
+//           }}
+//         >
+//           <Toolbar>
+//             <Typography
+//               variant="h6"
+//               component="div"
+//               sx={{
+//                 flexGrow: 1,
+//                 fontWeight: 700,
+//                 fontSize: "1.3rem",
+//               }}
+//             >
+//               🥭 Kiểm Tra Chất Lượng Xoài
+//             </Typography>
+//           </Toolbar>
+//         </AppBar>
 
-        <Container maxWidth="sm" sx={{ py: 3 }}>
-          {/* Welcome Screen */}
-          {!isCameraOpen && !capturedImage && (
-            <Fade in timeout={800}>
-              <Card sx={{ mb: 3, textAlign: "center", py: 4 }}>
-                <CardContent>
-                  <Typography
-                    variant="h4"
-                    gutterBottom
-                    sx={{
-                      fontSize: "2.5rem",
-                      mb: 2,
-                    }}
-                  >
-                    🥭
-                  </Typography>
-                  <Typography
-                    variant="h5"
-                    gutterBottom
-                    sx={{
-                      fontWeight: 600,
-                      color: "primary.main",
-                      mb: 1,
-                    }}
-                  >
-                    Kiểm Tra Xoài Tươi
-                  </Typography>
-                  <Typography
-                    variant="body1"
-                    color="text.secondary"
-                    sx={{ mb: 3 }}
-                  >
-                    Sử dụng AI để phát hiện nhiều quả xoài tươi hay thối cùng
-                    lúc
-                  </Typography>
-                  <Button
-                    variant="contained"
-                    size="large"
-                    startIcon={<CameraAlt />}
-                    onClick={openCamera}
-                    sx={{
-                      py: 1.5,
-                      px: 4,
-                      fontSize: "1.1rem",
-                      background:
-                        "linear-gradient(45deg, #FF8C00 30%, #FFA500 90%)",
-                      "&:hover": {
-                        background:
-                          "linear-gradient(45deg, #FF7F00 30%, #FF8C00 90%)",
-                      },
-                    }}
-                  >
-                    Bắt Đầu Kiểm Tra
-                  </Button>
-                </CardContent>
-              </Card>
-            </Fade>
-          )}
+//         <Container maxWidth="sm" sx={{ py: 3 }}>
+//           {/* Welcome Screen */}
+//           {!isCameraOpen && !capturedImage && (
+//             <Fade in timeout={800}>
+//               <Card sx={{ mb: 3, textAlign: "center", py: 4 }}>
+//                 <CardContent>
+//                   <Typography
+//                     variant="h4"
+//                     gutterBottom
+//                     sx={{
+//                       fontSize: "2.5rem",
+//                       mb: 2,
+//                     }}
+//                   >
+//                     🥭
+//                   </Typography>
+//                   <Typography
+//                     variant="h5"
+//                     gutterBottom
+//                     sx={{
+//                       fontWeight: 600,
+//                       color: "primary.main",
+//                       mb: 1,
+//                     }}
+//                   >
+//                     Kiểm Tra Xoài Tươi
+//                   </Typography>
+//                   <Typography
+//                     variant="body1"
+//                     color="text.secondary"
+//                     sx={{ mb: 3 }}
+//                   >
+//                     Sử dụng AI để phát hiện nhiều quả xoài tươi hay thối cùng
+//                     lúc
+//                   </Typography>
+//                   <Button
+//                     variant="contained"
+//                     size="large"
+//                     startIcon={<CameraAlt />}
+//                     onClick={openCamera}
+//                     sx={{
+//                       py: 1.5,
+//                       px: 4,
+//                       fontSize: "1.1rem",
+//                       background:
+//                         "linear-gradient(45deg, #FF8C00 30%, #FFA500 90%)",
+//                       "&:hover": {
+//                         background:
+//                           "linear-gradient(45deg, #FF7F00 30%, #FF8C00 90%)",
+//                       },
+//                     }}
+//                   >
+//                     Bắt Đầu Kiểm Tra
+//                   </Button>
+//                 </CardContent>
+//               </Card>
+//             </Fade>
+//           )}
 
-          {/* Camera View */}
-          {isCameraOpen && (
-            <Slide direction="up" in={isCameraOpen} timeout={500}>
-              <Paper
-                elevation={8}
-                sx={{
-                  borderRadius: 4,
-                  overflow: "hidden",
-                  mb: 3,
-                  position: "relative",
-                }}
-              >
-                <Box sx={{ position: "relative" }}>
-                  <Webcam
-                    audio={false}
-                    ref={webcamRef}
-                    screenshotFormat="image/jpeg"
-                    videoConstraints={videoConstraints}
-                    style={{
-                      width: "100%",
-                      height: "auto",
-                      display: "block",
-                    }}
-                  />
+//           {/* Camera View */}
+//           {isCameraOpen && (
+//             <Slide direction="up" in={isCameraOpen} timeout={500}>
+//               <Paper
+//                 elevation={8}
+//                 sx={{
+//                   borderRadius: 4,
+//                   overflow: "hidden",
+//                   mb: 3,
+//                   position: "relative",
+//                 }}
+//               >
+//                 <Box sx={{ position: "relative" }}>
+//                   <Webcam
+//                     audio={false}
+//                     ref={webcamRef}
+//                     screenshotFormat="image/jpeg"
+//                     videoConstraints={videoConstraints}
+//                     style={{
+//                       width: "100%",
+//                       height: "auto",
+//                       display: "block",
+//                     }}
+//                   />
 
-                  {/* Camera Controls Overlay */}
-                  <Box
-                    sx={{
-                      position: "absolute",
-                      bottom: 20,
-                      left: 0,
-                      right: 0,
-                      display: "flex",
-                      justifyContent: "center",
-                      gap: 2,
-                    }}
-                  >
-                    <Fab
-                      color="secondary"
-                      onClick={switchCamera}
-                      size="medium"
-                      sx={{ opacity: 0.9 }}
-                    >
-                      <FlipCameraIos />
-                    </Fab>
+//                   {/* Camera Controls Overlay */}
+//                   <Box
+//                     sx={{
+//                       position: "absolute",
+//                       bottom: 20,
+//                       left: 0,
+//                       right: 0,
+//                       display: "flex",
+//                       justifyContent: "center",
+//                       gap: 2,
+//                     }}
+//                   >
+//                     <Fab
+//                       color="secondary"
+//                       onClick={switchCamera}
+//                       size="medium"
+//                       sx={{ opacity: 0.9 }}
+//                     >
+//                       <FlipCameraIos />
+//                     </Fab>
 
-                    <Fab
-                      color="primary"
-                      onClick={capturePhoto}
-                      size="large"
-                      sx={{
-                        opacity: 0.9,
-                        transform: "scale(1.2)",
-                      }}
-                    >
-                      <PhotoCamera />
-                    </Fab>
+//                     <Fab
+//                       color="primary"
+//                       onClick={capturePhoto}
+//                       size="large"
+//                       sx={{
+//                         opacity: 0.9,
+//                         transform: "scale(1.2)",
+//                       }}
+//                     >
+//                       <PhotoCamera />
+//                     </Fab>
 
-                    <Fab
-                      onClick={resetApp}
-                      size="medium"
-                      sx={{ opacity: 0.9, bgcolor: "error.main" }}
-                    >
-                      <RestartAlt />
-                    </Fab>
-                  </Box>
-                </Box>
-              </Paper>
-            </Slide>
-          )}
+//                     <Fab
+//                       onClick={resetApp}
+//                       size="medium"
+//                       sx={{ opacity: 0.9, bgcolor: "error.main" }}
+//                     >
+//                       <RestartAlt />
+//                     </Fab>
+//                   </Box>
+//                 </Box>
+//               </Paper>
+//             </Slide>
+//           )}
 
-          {/* Analysis Results with Annotated Image */}
-          {(capturedImage || annotatedImageUrl) && (
-            <Fade in timeout={600}>
-              <Paper
-                elevation={8}
-                sx={{
-                  borderRadius: 4,
-                  overflow: "hidden",
-                  mb: 3,
-                }}
-              >
-                <Box sx={{ position: "relative" }}>
-                  {/* Hiển thị ảnh gốc khi đang phân tích, ảnh có khung khi đã xong */}
-                  {isAnalyzing ? (
-                    <img
-                      src={capturedImage!}
-                      alt="Captured mango"
-                      style={{
-                        width: "100%",
-                        height: "auto",
-                        display: "block",
-                      }}
-                    />
-                  ) : annotatedImageUrl ? (
-                    <img
-                      src={annotatedImageUrl}
-                      alt="Analyzed mangoes with detection boxes"
-                      style={{
-                        width: "100%",
-                        height: "auto",
-                        display: "block",
-                      }}
-                    />
-                  ) : (
-                    <img
-                      src={capturedImage!}
-                      alt="Captured mango"
-                      style={{
-                        width: "100%",
-                        height: "auto",
-                        display: "block",
-                      }}
-                    />
-                  )}
+//           {/* Analysis Results with Annotated Image */}
+//           {(capturedImage || annotatedImageUrl) && (
+//             <Fade in timeout={600}>
+//               <Paper
+//                 elevation={8}
+//                 sx={{
+//                   borderRadius: 4,
+//                   overflow: "hidden",
+//                   mb: 3,
+//                 }}
+//               >
+//                 <Box sx={{ position: "relative" }}>
+//                   {/* Hiển thị ảnh gốc khi đang phân tích, ảnh có khung khi đã xong */}
+//                   {isAnalyzing ? (
+//                     <img
+//                       src={capturedImage!}
+//                       alt="Captured mango"
+//                       style={{
+//                         width: "100%",
+//                         height: "auto",
+//                         display: "block",
+//                       }}
+//                     />
+//                   ) : annotatedImageUrl ? (
+//                     <img
+//                       src={annotatedImageUrl}
+//                       alt="Analyzed mangoes with detection boxes"
+//                       style={{
+//                         width: "100%",
+//                         height: "auto",
+//                         display: "block",
+//                       }}
+//                     />
+//                   ) : (
+//                     <img
+//                       src={capturedImage!}
+//                       alt="Captured mango"
+//                       style={{
+//                         width: "100%",
+//                         height: "auto",
+//                         display: "block",
+//                       }}
+//                     />
+//                   )}
 
-                  {/* Loading Overlay */}
-                  {isAnalyzing && (
-                    <Box
-                      sx={{
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundColor: "rgba(0,0,0,0.5)",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: "white",
-                      }}
-                    >
-                      <CircularProgress
-                        size={60}
-                        sx={{ color: "#FFA500", mb: 2 }}
-                      />
-                      <Typography variant="h6">Đang phân tích...</Typography>
-                      <Typography variant="body2">
-                        Vui lòng đợi một chút
-                      </Typography>
-                    </Box>
-                  )}
-                </Box>
-              </Paper>
-            </Fade>
-          )}
+//                   {/* Loading Overlay */}
+//                   {isAnalyzing && (
+//                     <Box
+//                       sx={{
+//                         position: "absolute",
+//                         top: 0,
+//                         left: 0,
+//                         right: 0,
+//                         bottom: 0,
+//                         backgroundColor: "rgba(0,0,0,0.5)",
+//                         display: "flex",
+//                         flexDirection: "column",
+//                         alignItems: "center",
+//                         justifyContent: "center",
+//                         color: "white",
+//                       }}
+//                     >
+//                       <CircularProgress
+//                         size={60}
+//                         sx={{ color: "#FFA500", mb: 2 }}
+//                       />
+//                       <Typography variant="h6">Đang phân tích...</Typography>
+//                       <Typography variant="body2">
+//                         Vui lòng đợi một chút
+//                       </Typography>
+//                     </Box>
+//                   )}
+//                 </Box>
+//               </Paper>
+//             </Fade>
+//           )}
 
-          {/* Results */}
-          {results && results.length > 0 && (
-            <Slide direction="up" in timeout={700}>
-              <Card sx={{ mb: 3 }}>
-                <CardContent>
-                  <Typography
-                    variant="h6"
-                    gutterBottom
-                    sx={{
-                      textAlign: "center",
-                      fontWeight: 600,
-                      mb: 3,
-                    }}
-                  >
-                    Kết Quả Phân Tích ({results.length} quả xoài)
-                  </Typography>
+//           {/* Results */}
+//           {results && results.length > 0 && (
+//             <Slide direction="up" in timeout={700}>
+//               <Card sx={{ mb: 3 }}>
+//                 <CardContent>
+//                   <Typography
+//                     variant="h6"
+//                     gutterBottom
+//                     sx={{
+//                       textAlign: "center",
+//                       fontWeight: 600,
+//                       mb: 3,
+//                     }}
+//                   >
+//                     Kết Quả Phân Tích ({results.length} quả xoài)
+//                   </Typography>
 
-                  {/* Tổng quan kết quả */}
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "center",
-                      gap: 2,
-                      mb: 3,
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <Chip
-                      icon={<Typography>✅</Typography>}
-                      label={`${
-                        results.filter((r) => r.label === "fresh").length
-                      } Tươi`}
-                      color="secondary"
-                      sx={{ fontWeight: 600 }}
-                    />
-                    <Chip
-                      icon={<Typography>❌</Typography>}
-                      label={`${
-                        results.filter((r) => r.label === "rotten").length
-                      } Thối`}
-                      color="error"
-                      sx={{ fontWeight: 600 }}
-                    />
-                  </Box>
+//                   {/* Tổng quan kết quả */}
+//                   <Box
+//                     sx={{
+//                       display: "flex",
+//                       justifyContent: "center",
+//                       gap: 2,
+//                       mb: 3,
+//                       flexWrap: "wrap",
+//                     }}
+//                   >
+//                     <Chip
+//                       icon={<Typography>✅</Typography>}
+//                       label={`${
+//                         results.filter((r) => r.label === "fresh").length
+//                       } Tươi`}
+//                       color="secondary"
+//                       sx={{ fontWeight: 600 }}
+//                     />
+//                     <Chip
+//                       icon={<Typography>❌</Typography>}
+//                       label={`${
+//                         results.filter((r) => r.label === "rotten").length
+//                       } Thối`}
+//                       color="error"
+//                       sx={{ fontWeight: 600 }}
+//                     />
+//                   </Box>
 
-                  {/* Chi tiết từng quả */}
-                  {results.map((result, index) => (
-                    <Box
-                      key={index}
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        py: 2,
-                        px: 3,
-                        borderRadius: 3,
-                        mb: index < results.length - 1 ? 2 : 0,
-                        backgroundColor:
-                          result.label === "fresh"
-                            ? "rgba(50, 205, 50, 0.1)"
-                            : "rgba(255, 68, 68, 0.1)",
-                        border:
-                          result.label === "fresh"
-                            ? "2px solid #32CD32"
-                            : "2px solid #FF4444",
-                      }}
-                    >
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 2 }}
-                      >
-                        <Typography variant="h4">{result.emoji}</Typography>
-                        <Box>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              fontWeight: 600,
-                              color:
-                                result.label === "fresh"
-                                  ? "secondary.dark"
-                                  : "error.dark",
-                              mb: 0.5,
-                            }}
-                          >
-                            Quả #{index + 1}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {result.message}
-                          </Typography>
-                        </Box>
-                      </Box>
+//                   {/* Chi tiết từng quả */}
+//                   {results.map((result, index) => (
+//                     <Box
+//                       key={index}
+//                       sx={{
+//                         display: "flex",
+//                         alignItems: "center",
+//                         justifyContent: "space-between",
+//                         py: 2,
+//                         px: 3,
+//                         borderRadius: 3,
+//                         mb: index < results.length - 1 ? 2 : 0,
+//                         backgroundColor:
+//                           result.label === "fresh"
+//                             ? "rgba(50, 205, 50, 0.1)"
+//                             : "rgba(255, 68, 68, 0.1)",
+//                         border:
+//                           result.label === "fresh"
+//                             ? "2px solid #32CD32"
+//                             : "2px solid #FF4444",
+//                       }}
+//                     >
+//                       <Box
+//                         sx={{ display: "flex", alignItems: "center", gap: 2 }}
+//                       >
+//                         <Typography variant="h4">{result.emoji}</Typography>
+//                         <Box>
+//                           <Typography
+//                             variant="h6"
+//                             sx={{
+//                               fontWeight: 600,
+//                               color:
+//                                 result.label === "fresh"
+//                                   ? "secondary.dark"
+//                                   : "error.dark",
+//                               mb: 0.5,
+//                             }}
+//                           >
+//                             Quả #{index + 1}
+//                           </Typography>
+//                           <Typography variant="body2" color="text.secondary">
+//                             {result.message}
+//                           </Typography>
+//                         </Box>
+//                       </Box>
 
-                      <Chip
-                        label={`${result.confidence}%`}
-                        color={result.label === "fresh" ? "secondary" : "error"}
-                        size="small"
-                        sx={{
-                          fontWeight: 600,
-                          minWidth: "60px",
-                        }}
-                      />
-                    </Box>
-                  ))}
-                </CardContent>
-              </Card>
-            </Slide>
-          )}
+//                       <Chip
+//                         label={`${result.confidence}%`}
+//                         color={result.label === "fresh" ? "secondary" : "error"}
+//                         size="small"
+//                         sx={{
+//                           fontWeight: 600,
+//                           minWidth: "60px",
+//                         }}
+//                       />
+//                     </Box>
+//                   ))}
+//                 </CardContent>
+//               </Card>
+//             </Slide>
+//           )}
 
-          {/* Error Message */}
-          {error && (
-            <Fade in timeout={500}>
-              <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
-                {error}
-              </Alert>
-            </Fade>
-          )}
+//           {/* Error Message */}
+//           {error && (
+//             <Fade in timeout={500}>
+//               <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
+//                 {error}
+//               </Alert>
+//             </Fade>
+//           )}
 
-          {/* Action Buttons */}
-          {(capturedImage || results || annotatedImageUrl) && (
-            <Fade in timeout={800}>
-              <Box
-                sx={{
-                  display: "flex",
-                  gap: 2,
-                  justifyContent: "center",
-                  mt: 3,
-                }}
-              >
-                <Button
-                  variant="outlined"
-                  startIcon={<CameraAlt />}
-                  onClick={openCamera}
-                  sx={{
-                    borderRadius: 25,
-                    px: 3,
-                    py: 1,
-                    borderWidth: 2,
-                    "&:hover": {
-                      borderWidth: 2,
-                    },
-                  }}
-                >
-                  Chụp Lại
-                </Button>
+//           {/* Action Buttons */}
+//           {(capturedImage || results || annotatedImageUrl) && (
+//             <Fade in timeout={800}>
+//               <Box
+//                 sx={{
+//                   display: "flex",
+//                   gap: 2,
+//                   justifyContent: "center",
+//                   mt: 3,
+//                 }}
+//               >
+//                 <Button
+//                   variant="outlined"
+//                   startIcon={<CameraAlt />}
+//                   onClick={openCamera}
+//                   sx={{
+//                     borderRadius: 25,
+//                     px: 3,
+//                     py: 1,
+//                     borderWidth: 2,
+//                     "&:hover": {
+//                       borderWidth: 2,
+//                     },
+//                   }}
+//                 >
+//                   Chụp Lại
+//                 </Button>
 
-                <Button
-                  variant="contained"
-                  startIcon={<RestartAlt />}
-                  onClick={resetApp}
-                  color="primary"
-                  sx={{
-                    borderRadius: 25,
-                    px: 3,
-                    py: 1,
-                  }}
-                >
-                  Bắt Đầu Lại
-                </Button>
-              </Box>
-            </Fade>
-          )}
-        </Container>
-      </Box>
-    </ThemeProvider>
-  );
-}
+//                 <Button
+//                   variant="contained"
+//                   startIcon={<RestartAlt />}
+//                   onClick={resetApp}
+//                   color="primary"
+//                   sx={{
+//                     borderRadius: 25,
+//                     px: 3,
+//                     py: 1,
+//                   }}
+//                 >
+//                   Bắt Đầu Lại
+//                 </Button>
+//               </Box>
+//             </Fade>
+//           )}
+//         </Container>
+//       </Box>
+//     </ThemeProvider>
+//   );
+// }
 
-export default App;
+// export default App;
 ////////////////////////////
 
 // import { useState, useRef, useCallback, useEffect } from "react";
@@ -1472,3 +1472,872 @@ export default App;
 // export default App;
 
 // /////////////////////////////////
+import React, { useState, useRef, useCallback, useEffect } from "react";
+import {
+  Container,
+  Paper,
+  Typography,
+  Button,
+  Box,
+  CircularProgress,
+  Fab,
+  Chip,
+  Alert,
+  Slide,
+  Fade,
+  Card,
+  CardContent,
+  AppBar,
+  Toolbar,
+  LinearProgress,
+} from "@mui/material";
+import {
+  CameraAlt,
+  FlipCameraIos,
+  PhotoCamera,
+  RestartAlt,
+
+} from "@mui/icons-material";
+
+import Webcam from "react-webcam";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
+
+// Custom theme với màu sắc xoài
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: "#FF8C00",
+      light: "#FFB347",
+      dark: "#FF7F00",
+    },
+    secondary: {
+      main: "#32CD32",
+      light: "#90EE90",
+      dark: "#228B22",
+    },
+    error: {
+      main: "#FF4444",
+      light: "#FF7777",
+      dark: "#CC0000",
+    },
+    background: {
+      default: "#FFF8DC",
+      paper: "#FFFFFF",
+    },
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 25,
+          textTransform: "none",
+          fontWeight: 600,
+          padding: "12px 24px",
+        },
+      },
+    },
+    MuiFab: {
+      styleOverrides: {
+        root: {
+          boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: 20,
+          boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
+        },
+      },
+    },
+  },
+});
+
+interface DetectionResult {
+  label: string;
+  confidence: number;
+  emoji: string;
+  message: string;
+}
+
+interface ApiResponse {
+  results: DetectionResult[];
+  image_url: string;
+}
+
+// Configuration
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://mango-backend-2htc.onrender.com'  // Thay bằng URL Render của bạn
+  : 'http://127.0.0.1:8000';
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+function App() {
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [annotatedImageUrl, setAnnotatedImageUrl] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [results, setResults] = useState<DetectionResult[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [facingMode, setFacingMode] = useState<"user" | "environment">("environment");
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isServerWarm, setIsServerWarm] = useState(false);
+  const [analysisStage, setAnalysisStage] = useState<string>("");
+
+  const webcamRef = useRef<Webcam>(null);
+  const audioRef = useRef<HTMLAudioElement[]>([]);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Preload audio for feedback
+  useEffect(() => {
+    const freshAudio = new Audio();
+    const rottenAudio = new Audio();
+    freshAudio.src = "/sounds/fresh.mp3";
+    rottenAudio.src = "/sounds/rotten.mp3";
+    audioRef.current = [freshAudio, rottenAudio];
+  }, []);
+
+  // Warm up server on app load
+  useEffect(() => {
+    warmUpServer();
+  }, []);
+
+  const warmUpServer = async () => {
+    try {
+      setAnalysisStage("Đang khởi động server...");
+      const response = await fetch(`${API_BASE_URL}/`, {
+        method: 'GET',
+        signal: AbortSignal.timeout(30000), // 30s timeout
+      });
+      
+      if (response.ok) {
+        setIsServerWarm(true);
+        setAnalysisStage("");
+      }
+    } catch (error) {
+      console.log("Server warm-up failed:", error);
+      setAnalysisStage("");
+    }
+  };
+
+  const playSound = (isFresh: boolean) => {
+    try {
+      const audio = audioRef.current[isFresh ? 0 : 1];
+      audio?.play().catch((e) => console.log("Audio play failed:", e));
+    } catch (e) {
+      console.log("Audio not available:", e);
+    }
+  };
+
+  const openCamera = () => {
+    setIsCameraOpen(true);
+    setCapturedImage(null);
+    setAnnotatedImageUrl(null);
+    setResults(null);
+    setError(null);
+    setUploadProgress(0);
+    setAnalysisStage("");
+  };
+
+  const switchCamera = () => {
+    setFacingMode((prev) => (prev === "user" ? "environment" : "user"));
+  };
+
+  const capturePhoto = useCallback(() => {
+    const imageSrc = webcamRef.current?.getScreenshot({
+      width: 800, // Reduced size for faster processing
+      height: 600,
+      // Removed quality property as it is not supported
+    });
+    if (imageSrc) {
+      setCapturedImage(imageSrc);
+      setIsCameraOpen(false);
+      analyzeImage(imageSrc);
+    }
+  }, [webcamRef]);
+
+  const compressImage = (canvas: HTMLCanvasElement, quality: number = 0.7): Promise<Blob> => {
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        resolve(blob!);
+      }, 'image/jpeg', quality);
+    });
+  };
+
+  const analyzeImage = async (imageData: string) => {
+    // Cancel any existing request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    abortControllerRef.current = new AbortController();
+    
+    setIsAnalyzing(true);
+    setError(null);
+    setAnnotatedImageUrl(null);
+    setUploadProgress(0);
+
+    try {
+      setAnalysisStage("Đang chuẩn bị hình ảnh...");
+      
+      // Convert base64 to blob with compression
+      const byteString = atob(imageData.split(",")[1]);
+      const mimeString = imageData.split(",")[0].split(":")[1].split(";")[0];
+      const ab = new ArrayBuffer(byteString.length);
+      const ia = new Uint8Array(ab);
+      for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+      }
+      
+      let blob = new Blob([ab], { type: mimeString });
+      
+      // Compress if file is too large
+      if (blob.size > MAX_FILE_SIZE) {
+        setAnalysisStage("Đang nén hình ảnh...");
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d')!;
+        const img = new Image();
+        
+        await new Promise<void>((resolve) => {
+          img.onload = async () => {
+            // Calculate new dimensions
+            const maxSize = 800;
+            let { width, height } = img;
+            
+            if (width > height) {
+              if (width > maxSize) {
+                height = height * (maxSize / width);
+                width = maxSize;
+              }
+            } else {
+              if (height > maxSize) {
+                width = width * (maxSize / height);
+                height = maxSize;
+              }
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            blob = await compressImage(canvas, 0.7);
+            resolve();
+          };
+          img.src = imageData;
+        });
+      }
+
+      setAnalysisStage("Đang tải lên server...");
+      setUploadProgress(25);
+
+      // Create form data
+      const formData = new FormData();
+      formData.append("file", blob, "mango.jpg");
+
+      setAnalysisStage(!isServerWarm ? "Đang khởi động AI (có thể mất 1-2 phút)..." : "AI đang phân tích...");
+      setUploadProgress(50);
+
+      // Call API with timeout and progress tracking
+      const apiResponse = await fetch(`${API_BASE_URL}/predict/`, {
+        method: "POST",
+        body: formData,
+        signal: abortControllerRef.current.signal,
+      });
+
+      setUploadProgress(75);
+
+      if (!apiResponse.ok) {
+        const errorText = await apiResponse.text();
+        throw new Error(`Lỗi server: ${apiResponse.status} - ${errorText}`);
+      }
+
+      setAnalysisStage("Đang xử lý kết quả...");
+      const data: ApiResponse = await apiResponse.json();
+      setResults(data.results);
+      setUploadProgress(90);
+
+      // Load annotated image từ backend nếu có
+      if (data.image_url) {
+        setAnalysisStage("Đang tải hình ảnh kết quả...");
+        try {
+          const annotatedImageResponse = await fetch(
+            `${API_BASE_URL}${data.image_url}`,
+            { signal: abortControllerRef.current.signal }
+          );
+          if (annotatedImageResponse.ok) {
+            const imageBlob = await annotatedImageResponse.blob();
+            const imageUrl = URL.createObjectURL(imageBlob);
+            setAnnotatedImageUrl(imageUrl);
+          }
+        } catch (imgError) {
+          console.log("Could not load annotated image:", imgError);
+          // Continue without annotated image
+        }
+      }
+
+      setUploadProgress(100);
+
+      // Play sound feedback
+      if (data.results.length > 0) {
+        const freshCount = data.results.filter((r) => r.label === "fresh").length;
+        const rottenCount = data.results.filter((r) => r.label === "rotten").length;
+        playSound(freshCount >= rottenCount);
+      }
+
+      // Mark server as warm after successful request
+      setIsServerWarm(true);
+      
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') {
+        setError("Đã hủy phân tích");
+      } else if (err instanceof Error && err.message.includes('timeout')) {
+        setError("Kết nối bị timeout. Server có thể đang khởi động, vui lòng thử lại sau 1-2 phút.");
+      } else {
+        setError(err instanceof Error ? err.message : "Đã xảy ra lỗi không xác định");
+      }
+      setUploadProgress(0);
+    } finally {
+      setIsAnalyzing(false);
+      setAnalysisStage("");
+      abortControllerRef.current = null;
+    }
+  };
+
+  const cancelAnalysis = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    setIsAnalyzing(false);
+    setAnalysisStage("");
+    setUploadProgress(0);
+  };
+
+  const resetApp = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    setIsCameraOpen(false);
+    setCapturedImage(null);
+    setAnnotatedImageUrl(null);
+    setResults(null);
+    setError(null);
+    setIsAnalyzing(false);
+    setUploadProgress(0);
+    setAnalysisStage("");
+
+    // Cleanup object URL to prevent memory leaks
+    if (annotatedImageUrl) {
+      URL.revokeObjectURL(annotatedImageUrl);
+    }
+  };
+
+  // Cleanup effect for object URLs and abort controller
+  useEffect(() => {
+    return () => {
+      if (annotatedImageUrl) {
+        URL.revokeObjectURL(annotatedImageUrl);
+      }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [annotatedImageUrl]);
+
+  const videoConstraints = {
+    width: { ideal: 800 }, // Reduced resolution for better performance
+    height: { ideal: 600 },
+    facingMode: facingMode,
+  };
+
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Box
+        sx={{
+          minHeight: "100vh",
+          background: "linear-gradient(135deg, #FFF8DC 0%, #FFE4B5 100%)",
+        }}
+      >
+        {/* Header */}
+        <AppBar
+          position="static"
+          elevation={0}
+          sx={{
+            background: "linear-gradient(90deg, #FF8C00 0%, #FFA500 100%)",
+          }}
+        >
+          <Toolbar>
+            <Typography
+              variant="h6"
+              component="div"
+              sx={{
+                flexGrow: 1,
+                fontWeight: 700,
+                fontSize: "1.3rem",
+              }}
+            >
+              🥭 Kiểm Tra Chất Lượng Xoài
+            </Typography>
+            {/* Server Status Indicator */}
+            <Chip 
+              label={isServerWarm ? "AI Sẵn Sàng" : "AI Đang Khởi Động"} 
+              color={isServerWarm ? "secondary" : "default"}
+              size="small"
+              sx={{ ml: 2 }}
+            />
+          </Toolbar>
+        </AppBar>
+
+        <Container maxWidth="sm" sx={{ py: 3 }}>
+          {/* Welcome Screen */}
+          {!isCameraOpen && !capturedImage && (
+            <Fade in timeout={800}>
+              <Card sx={{ mb: 3, textAlign: "center", py: 4 }}>
+                <CardContent>
+                  <Typography
+                    variant="h4"
+                    gutterBottom
+                    sx={{
+                      fontSize: "2.5rem",
+                      mb: 2,
+                    }}
+                  >
+                    🥭
+                  </Typography>
+                  <Typography
+                    variant="h5"
+                    gutterBottom
+                    sx={{
+                      fontWeight: 600,
+                      color: "primary.main",
+                      mb: 1,
+                    }}
+                  >
+                    Kiểm Tra Xoài Tươi
+                  </Typography>
+                  <Typography
+                    variant="body1"
+                    color="text.secondary"
+                    sx={{ mb: 3 }}
+                  >
+                    Sử dụng AI để phát hiện nhiều quả xoài tươi hay thối cùng lúc
+                  </Typography>
+                  
+                  {!isServerWarm && (
+                    <Alert severity="info" sx={{ mb: 3, textAlign: "left" }}>
+                      <Typography variant="body2">
+                        <strong>Lưu ý:</strong> Lần đầu sử dụng có thể mất 1-2 phút để khởi động AI. 
+                        Những lần sau sẽ nhanh hơn.
+                      </Typography>
+                    </Alert>
+                  )}
+                  
+                  <Button
+                    variant="contained"
+                    size="large"
+                    startIcon={<CameraAlt />}
+                    onClick={openCamera}
+                    disabled={!isServerWarm && analysisStage !== ""}
+                    sx={{
+                      py: 1.5,
+                      px: 4,
+                      fontSize: "1.1rem",
+                      background:
+                        "linear-gradient(45deg, #FF8C00 30%, #FFA500 90%)",
+                      "&:hover": {
+                        background:
+                          "linear-gradient(45deg, #FF7F00 30%, #FF8C00 90%)",
+                      },
+                    }}
+                  >
+                    Bắt Đầu Kiểm Tra
+                  </Button>
+                  
+                  {analysisStage && (
+                    <Box sx={{ mt: 2 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        {analysisStage}
+                      </Typography>
+                    </Box>
+                  )}
+                </CardContent>
+              </Card>
+            </Fade>
+          )}
+
+          {/* Camera View */}
+          {isCameraOpen && (
+            <Slide direction="up" in={isCameraOpen} timeout={500}>
+              <Paper
+                elevation={8}
+                sx={{
+                  borderRadius: 4,
+                  overflow: "hidden",
+                  mb: 3,
+                  position: "relative",
+                }}
+              >
+                <Box sx={{ position: "relative" }}>
+                  <Webcam
+                    audio={false}
+                    ref={webcamRef}
+                    screenshotFormat="image/jpeg"
+                    videoConstraints={videoConstraints}
+                    style={{
+                      width: "100%",
+                      height: "auto",
+                      display: "block",
+                    }}
+                  />
+
+                  {/* Camera Controls Overlay */}
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      bottom: 20,
+                      left: 0,
+                      right: 0,
+                      display: "flex",
+                      justifyContent: "center",
+                      gap: 2,
+                    }}
+                  >
+                    <Fab
+                      color="secondary"
+                      onClick={switchCamera}
+                      size="medium"
+                      sx={{ opacity: 0.9 }}
+                    >
+                      <FlipCameraIos />
+                    </Fab>
+
+                    <Fab
+                      color="primary"
+                      onClick={capturePhoto}
+                      size="large"
+                      sx={{
+                        opacity: 0.9,
+                        transform: "scale(1.2)",
+                      }}
+                    >
+                      <PhotoCamera />
+                    </Fab>
+
+                    <Fab
+                      onClick={resetApp}
+                      size="medium"
+                      sx={{ opacity: 0.9, bgcolor: "error.main" }}
+                    >
+                      <RestartAlt />
+                    </Fab>
+                  </Box>
+                </Box>
+              </Paper>
+            </Slide>
+          )}
+
+          {/* Analysis Results with Annotated Image */}
+          {(capturedImage || annotatedImageUrl) && (
+            <Fade in timeout={600}>
+              <Paper
+                elevation={8}
+                sx={{
+                  borderRadius: 4,
+                  overflow: "hidden",
+                  mb: 3,
+                }}
+              >
+                <Box sx={{ position: "relative" }}>
+                  {/* Hiển thị ảnh gốc khi đang phân tích, ảnh có khung khi đã xong */}
+                  {isAnalyzing ? (
+                    <img
+                      src={capturedImage!}
+                      alt="Captured mango"
+                      style={{
+                        width: "100%",
+                        height: "auto",
+                        display: "block",
+                      }}
+                    />
+                  ) : annotatedImageUrl ? (
+                    <img
+                      src={annotatedImageUrl}
+                      alt="Analyzed mangoes with detection boxes"
+                      style={{
+                        width: "100%",
+                        height: "auto",
+                        display: "block",
+                      }}
+                    />
+                  ) : (
+                    <img
+                      src={capturedImage!}
+                      alt="Captured mango"
+                      style={{
+                        width: "100%",
+                        height: "auto",
+                        display: "block",
+                      }}
+                    />
+                  )}
+
+                  {/* Loading Overlay with Progress */}
+                  {isAnalyzing && (
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: "rgba(0,0,0,0.7)",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: "white",
+                        p: 3,
+                      }}
+                    >
+                      <CircularProgress
+                        size={60}
+                        sx={{ color: "#FFA500", mb: 3 }}
+                      />
+                      
+                      {uploadProgress > 0 && (
+                        <Box sx={{ width: '80%', mb: 2 }}>
+                          <LinearProgress 
+                            variant="determinate" 
+                            value={uploadProgress}
+                            sx={{
+                              height: 8,
+                              borderRadius: 4,
+                              backgroundColor: 'rgba(255,255,255,0.3)',
+                              '& .MuiLinearProgress-bar': {
+                                backgroundColor: '#FFA500'
+                              }
+                            }}
+                          />
+                          <Typography variant="caption" sx={{ mt: 1, display: 'block', textAlign: 'center' }}>
+                            {uploadProgress}%
+                          </Typography>
+                        </Box>
+                      )}
+                      
+                      <Typography variant="h6" sx={{ textAlign: 'center', mb: 1 }}>
+                        {analysisStage || "Đang phân tích..."}
+                      </Typography>
+                      
+                      {!isServerWarm && (
+                        <Typography variant="body2" sx={{ textAlign: 'center', mb: 2, opacity: 0.8 }}>
+                          Lần đầu có thể mất 1-2 phút
+                        </Typography>
+                      )}
+                      
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={cancelAnalysis}
+                        sx={{
+                          color: 'white',
+                          borderColor: 'white',
+                          '&:hover': {
+                            borderColor: '#FFA500',
+                            backgroundColor: 'rgba(255,165,0,0.1)'
+                          }
+                        }}
+                      >
+                        Hủy
+                      </Button>
+                    </Box>
+                  )}
+                </Box>
+              </Paper>
+            </Fade>
+          )}
+
+          {/* Results */}
+          {results && results.length > 0 && (
+            <Slide direction="up" in timeout={700}>
+              <Card sx={{ mb: 3 }}>
+                <CardContent>
+                  <Typography
+                    variant="h6"
+                    gutterBottom
+                    sx={{
+                      textAlign: "center",
+                      fontWeight: 600,
+                      mb: 3,
+                    }}
+                  >
+                    Kết Quả Phân Tích ({results.length} quả xoài)
+                  </Typography>
+
+                  {/* Tổng quan kết quả */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                      gap: 2,
+                      mb: 3,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <Chip
+                      icon={<Typography>✅</Typography>}
+                      label={`${
+                        results.filter((r) => r.label === "fresh").length
+                      } Tươi`}
+                      color="secondary"
+                      sx={{ fontWeight: 600 }}
+                    />
+                    <Chip
+                      icon={<Typography>❌</Typography>}
+                      label={`${
+                        results.filter((r) => r.label === "rotten").length
+                      } Thối`}
+                      color="error"
+                      sx={{ fontWeight: 600 }}
+                    />
+                  </Box>
+
+                  {/* Chi tiết từng quả */}
+                  {results.map((result, index) => (
+                    <Box
+                      key={index}
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        py: 2,
+                        px: 3,
+                        borderRadius: 3,
+                        mb: index < results.length - 1 ? 2 : 0,
+                        backgroundColor:
+                          result.label === "fresh"
+                            ? "rgba(50, 205, 50, 0.1)"
+                            : "rgba(255, 68, 68, 0.1)",
+                        border:
+                          result.label === "fresh"
+                            ? "2px solid #32CD32"
+                            : "2px solid #FF4444",
+                      }}
+                    >
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 2 }}
+                      >
+                        <Typography variant="h4">{result.emoji}</Typography>
+                        <Box>
+                          <Typography
+                            variant="h6"
+                            sx={{
+                              fontWeight: 600,
+                              color:
+                                result.label === "fresh"
+                                  ? "secondary.dark"
+                                  : "error.dark",
+                              mb: 0.5,
+                            }}
+                          >
+                            Quả #{index + 1}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {result.message}
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      <Chip
+                        label={`${result.confidence}%`}
+                        color={result.label === "fresh" ? "secondary" : "error"}
+                        size="small"
+                        sx={{
+                          fontWeight: 600,
+                          minWidth: "60px",
+                        }}
+                      />
+                    </Box>
+                  ))}
+                </CardContent>
+              </Card>
+            </Slide>
+          )}
+
+          {/* Error Message */}
+          {error && (
+            <Fade in timeout={500}>
+              <Alert 
+                severity="error" 
+                sx={{ mb: 3, borderRadius: 2 }}
+                action={
+                  <Button color="inherit" size="small" onClick={() => setError(null)}>
+                    Đóng
+                  </Button>
+                }
+              >
+                <Typography variant="body2">{error}</Typography>
+                {error.includes('timeout') && (
+                  <Typography variant="caption" sx={{ display: 'block', mt: 1 }}>
+                    Gợi ý: Đợi 1-2 phút rồi thử lại, hoặc thử với ảnh nhỏ hơn
+                  </Typography>
+                )}
+              </Alert>
+            </Fade>
+          )}
+
+          {/* Action Buttons */}
+          {(capturedImage || results || annotatedImageUrl) && (
+            <Fade in timeout={800}>
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: 2,
+                  justifyContent: "center",
+                  mt: 3,
+                  flexWrap: "wrap",
+                }}
+              >
+                <Button
+                  variant="outlined"
+                  startIcon={<CameraAlt />}
+                  onClick={openCamera}
+                  disabled={isAnalyzing}
+                  sx={{
+                    borderRadius: 25,
+                    px: 3,
+                    py: 1,
+                    borderWidth: 2,
+                    "&:hover": {
+                      borderWidth: 2,
+                    },
+                  }}
+                >
+                  Chụp Lại
+                </Button>
+
+                <Button
+                  variant="contained"
+                  startIcon={<RestartAlt />}
+                  onClick={resetApp}
+                  color="primary"
+                  sx={{
+                    borderRadius: 25,
+                    px: 3,
+                    py: 1,
+                  }}
+                >
+                  Bắt Đầu Lại
+                </Button>
+              </Box>
+            </Fade>
+          )}
+        </Container>
+      </Box>
+    </ThemeProvider>
+  );
+}
+
+export default App;
