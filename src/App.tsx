@@ -170,13 +170,10 @@ function App() {
       formData.append("file", blob, "mango.jpg");
 
       // Gọi API backend
-      const apiResponse = await fetch(
-        "https://web-production-91ffc.up.railway.app/predict/",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const apiResponse = await fetch("http://127.0.0.1:8000/predict/", {
+        method: "POST",
+        body: formData,
+      });
 
       if (!apiResponse.ok) {
         throw new Error("Lỗi khi phân tích hình ảnh");
@@ -188,7 +185,7 @@ function App() {
       // Load ảnh annotated từ backend nếu có
       if (data.image_url) {
         const annotatedImageResponse = await fetch(
-          `https://web-production-91ffc.up.railway.app${data.image_url}`
+          `http://127.0.0.1:8000${data.image_url}`
         );
         if (annotatedImageResponse.ok) {
           const imageBlob = await annotatedImageResponse.blob();
@@ -651,7 +648,7 @@ function App() {
 export default App;
 ////////////////////////////
 
-// import  { useState, useRef, useCallback, useEffect } from "react";
+// import { useState, useRef, useCallback, useEffect } from "react";
 // import {
 //   Container,
 //   Paper,
@@ -764,7 +761,7 @@ export default App;
 //   const webcamRef = useRef<Webcam>(null);
 //   const audioRef = useRef<HTMLAudioElement[]>([]);
 
-//   const API_BASE_URL = "https://mango-backend-2htc.onrender.com";
+//   const API_BASE_URL = "http://127.0.0.1:8000";
 
 //   // ✅ Keep-alive và warm-up server
 //   useEffect(() => {
@@ -1473,3 +1470,5 @@ export default App;
 // }
 
 // export default App;
+
+// /////////////////////////////////
