@@ -13,7 +13,7 @@ import {
   Video,
   Zap,
 } from "lucide-react";
-
+import MangoChatbot from "./Chatbot";
 interface DetectionResult {
   label: string;
   confidence: number;
@@ -59,9 +59,11 @@ const API_BASE_URL =
     ? "https://mango-backend-2htc.onrender.com"
     : "http://127.0.0.1:8000";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 function App() {
+  const [isChatOpen, setIsChatOpen] = useState(false);
+
   const [mode, setMode] = useState<Mode>("home");
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [annotatedImageUrl, setAnnotatedImageUrl] = useState<string | null>(
@@ -835,9 +837,9 @@ function App() {
 
                 <button
                   onClick={resetApp}
-                  className="bg-gray-500/90 backdrop-blur-sm p-4 rounded-full shadow-lg hover:bg-gray-600 transition-all hover:scale-110"
+                  className="bg-red-500/90 backdrop-blur-sm p-4 rounded-full shadow-lg hover:bg-red-600 transition-all hover:scale-110"
                 >
-                  <RefreshCw className="w-6 h-6 text-white" />
+                  <X className="w-6 h-6 text-white" />
                 </button>
               </div>
             </div>
@@ -873,15 +875,24 @@ function App() {
             />
 
             {!selectedFile ? (
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full border-4 border-dashed border-blue-300 rounded-2xl p-12 hover:border-blue-500 hover:bg-blue-50 transition-all"
-              >
-                <Video className="w-16 h-16 mx-auto mb-4 text-blue-400" />
-                <p className="text-lg font-semibold text-gray-700">
-                  Nhấn để chọn file
-                </p>
-              </button>
+              <>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full border-4 border-dashed border-blue-300 rounded-2xl p-12 hover:border-blue-500 hover:bg-blue-50 transition-all"
+                >
+                  <Video className="w-16 h-16 mx-auto mb-4 text-blue-400" />
+                  <p className="text-lg font-semibold text-gray-700">
+                    Nhấn để chọn file
+                  </p>
+                </button>
+                <button
+                  onClick={resetApp}
+                  className="w-full mt-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 rounded-xl font-bold hover:shadow-xl transform hover:scale-105 transition-all flex items-center justify-center gap-2"
+                >
+                  <RefreshCw className="w-5 h-5" />
+                  🏠 Về Trang Chủ
+                </button>
+              </>
             ) : (
               <div className="space-y-4">
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center justify-between">
@@ -1261,6 +1272,10 @@ function App() {
           </div>
         )}
       </main>
+      <MangoChatbot
+        isOpen={isChatOpen}
+        onToggle={() => setIsChatOpen(!isChatOpen)}
+      />
     </div>
   );
 }
